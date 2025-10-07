@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -16,6 +16,19 @@ import {
   Chip,
   CircularProgress,
   Alert,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Tabs,
+  Tab,
+  Divider,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  LinearProgress,
 } from '@mui/material';
 import {
   CloudUpload as UploadIcon,
@@ -25,18 +38,44 @@ import {
   School as SchoolIcon,
   Description as PdfIcon,
   RocketLaunch as RocketIcon,
+  VideoLibrary as VideoIcon,
+  Delete as DeleteIcon,
+  Visibility as ViewIcon,
+  GetApp as DownloadIcon,
+  AllInclusive as AllIcon,
+  InsertDriveFile as FileIcon,
 } from '@mui/icons-material';
 import { pdfAPI } from '../utils/api';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [pdfs, setPdfs] = useState([]);
   const [selectedPDF, setSelectedPDF] = useState(null);
+  const [sourceType, setSourceType] = useState('all'); // 'all' or 'specific'
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [tabValue, setTabValue] = useState(0);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [pdfToDelete, setPdfToDelete] = useState(null);
 
   useEffect(() => {
     loadPDFs();
+    seedNCERTData();
   }, []);
+
+  const seedNCERTData = async () => {
+    // Check if we already have seeded data
+    try {
+      const response = await pdfAPI.getAllPDFs();
+      if (response.length === 0) {
+        // Seed with NCERT Class XI Physics data
+        console.log('Seeding NCERT data...');
+        // This would typically be done on the backend
+      }
+    } catch (error) {
+      console.error('Error checking seeded data:', error);
+    }
+  };
 
   const loadPDFs = async () => {
     try {
@@ -75,6 +114,58 @@ const Dashboard = () => {
 
   const handlePDFSelect = (pdf) => {
     setSelectedPDF(pdf);
+  };
+
+  const handleDeletePDF = async () => {
+    if (!pdfToDelete) return;
+    
+    try {
+      // Call delete API
+      const result = await pdfAPI.deletePDF(pdfToDelete._id);
+      console.log('Delete result:', result);
+      
+      // Reload PDFs list
+      await loadPDFs();
+      
+      // Clear selected PDF if it was the deleted one
+      if (selectedPDF && selectedPDF._id === pdfToDelete._id) {
+        setSelectedPDF(null);
+      }
+      
+      // Close dialog and reset state
+      setDeleteDialogOpen(false);
+      setPdfToDelete(null);
+      
+      // Show success message
+      alert(`PDF "${pdfToDelete.originalName}" deleted successfully!`);
+    } catch (error) {
+      console.error('Error deleting PDF:', error);
+      alert(`Failed to delete PDF: ${error.message}`);
+    }
+  };
+
+  const handleStartQuiz = () => {
+    const pdfIds = sourceType === 'all' 
+      ? pdfs.map(pdf => pdf._id)
+      : selectedPDF ? [selectedPDF._id] : [];
+    
+    navigate('/quiz', { state: { pdfIds, sourceType } });
+  };
+
+  const handleStartChat = () => {
+    const selectedPDFs = sourceType === 'all' 
+      ? pdfs
+      : selectedPDF ? [selectedPDF] : [];
+    
+    navigate('/chat', { state: { selectedPDFs, sourceType } });
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   if (loading) {
@@ -147,241 +238,467 @@ const Dashboard = () => {
       </Paper>
 
       {/* Upload Section */}
-      <Card sx={{ mb: 4 }}>
-        <CardContent sx={{ p: { xs: 3, md: 4 } }}>
-          <Box textAlign="center">
-            <Avatar
-              sx={{
-                width: 64,
-                height: 64,
-                bgcolor: 'primary.light',
-                mx: 'auto',
-                mb: 2
-              }}
-            >
-              <UploadIcon fontSize="large" />
-            </Avatar>
-            
-            <Typography variant="h4" component="h2" gutterBottom sx={{ fontWeight: 600 }}>
-              Upload Study Material
-            </Typography>
-            
-            <Typography color="text.secondary" sx={{ mb: 4 }}>
-              Upload NCERT PDF textbooks to start your personalized learning journey
-            </Typography>
-            
-            <Box sx={{ maxWidth: 400, mx: 'auto' }}>
-              <input
-                accept=".pdf"
-                style={{ display: 'none' }}
-                id="pdf-upload"
-                type="file"
-                onChange={handleFileUpload}
-                disabled={uploading}
-              />
-              <label htmlFor="pdf-upload">
-                <Button
-                  variant="contained"
-                  component="span"
-                  size="large"
-                  disabled={uploading}
-                  startIcon={uploading ? <CircularProgress size={20} /> : <UploadIcon />}
-                  sx={{ px: 4, py: 2, fontSize: '1.1rem' }}
-                >
-                  {uploading ? 'Uploading...' : 'Choose PDF File'}
-                </Button>
-              </label>
-              
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                Supports PDF files up to 50MB • NCERT textbooks recommended
-              </Typography>
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
+            {/* Source Selector Section */}
+      <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
+        <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
+          📚 Select Learning Source
+        </Typography>
+        
+        <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} sx={{ mb: 3 }}>
+          <Tab label="Source Type" />
+          <Tab label="Upload PDF" />
+          <Tab label="Manage PDFs" />
+        </Tabs>
 
-      {/* PDF Selection Section */}
-      {pdfs.length > 0 && (
-        <Card sx={{ mb: 4 }}>
-          <CardContent sx={{ p: { xs: 3, md: 4 } }}>
-            <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
-              <PdfIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-              Select Your Study Material
-            </Typography>
-            
-            <RadioGroup
-              value={selectedPDF?._id || 'all'}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value === 'all') {
-                  handlePDFSelect(null);
-                } else {
-                  const pdf = pdfs.find(p => p._id === value);
-                  handlePDFSelect(pdf);
-                }
-              }}
-            >
-              {/* All PDFs Option */}
-              <Paper 
-                variant="outlined" 
-                sx={{ 
-                  p: 2, 
-                  mb: 2,
-                  '&:hover': { bgcolor: 'action.hover' },
-                  border: selectedPDF === null ? 2 : 1,
-                  borderColor: selectedPDF === null ? 'primary.main' : 'divider'
+        {/* Tab 0: Source Type Selection */}
+        {tabValue === 0 && (
+          <Box>
+            <FormControl fullWidth sx={{ mb: 3 }}>
+              <InputLabel>Select Study Material</InputLabel>
+              <Select
+                value={sourceType === 'all' ? 'all' : selectedPDF?._id || ''}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === 'all') {
+                    setSourceType('all');
+                    setSelectedPDF(null);
+                  } else {
+                    setSourceType('specific');
+                    const pdf = pdfs.find(p => p._id === value);
+                    setSelectedPDF(pdf);
+                  }
                 }}
+                label="Select Study Material"
               >
-                <FormControlLabel
-                  value="all"
-                  control={<Radio />}
-                  label={
+                <MenuItem value="all">
+                  <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                    <AllIcon sx={{ mr: 2 }} />
                     <Box>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-                        All Uploaded Materials
+                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                        All Uploaded PDFs
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Use all uploaded PDFs for comprehensive learning
+                      <Typography variant="caption" color="text.secondary">
+                        Use all your uploaded study materials together ({pdfs.length} files)
                       </Typography>
                     </Box>
-                  }
-                  sx={{ width: '100%' }}
-                />
-              </Paper>
+                  </Box>
+                </MenuItem>
+                {pdfs.map((pdf) => (
+                  <MenuItem key={pdf._id} value={pdf._id}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                      <PdfIcon sx={{ mr: 2, color: 'error.main' }} />
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                          {pdf.originalName}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {formatFileSize(pdf.size)} • {new Date(pdf.uploadDate).toLocaleDateString()}
+                          {pdf.isNCERT && ' • NCERT'}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Source Summary */}
+            <Alert severity="info" sx={{ mb: 3 }}>
+              <Typography variant="body2">
+                <strong>Selected Source:</strong> {
+                  sourceType === 'all' 
+                    ? `All PDFs (${pdfs.length} files)`
+                    : selectedPDF 
+                      ? selectedPDF.originalName
+                      : 'No specific PDF selected'
+                }
+              </Typography>
+            </Alert>
+
+            {/* Action Buttons */}
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <Button
+                variant="contained"
+                startIcon={<QuizIcon />}
+                onClick={handleStartQuiz}
+                disabled={!selectedPDF && sourceType !== 'all'}
+                size="large"
+                sx={{ minWidth: 140 }}
+              >
+                Start Quiz
+              </Button>
               
-              {/* Individual PDF Options */}
-              {pdfs.map((pdf) => (
-                <Paper 
-                  key={pdf._id}
-                  variant="outlined" 
-                  sx={{ 
-                    p: 2, 
+              <Button
+                variant="outlined"
+                startIcon={<ChatIcon />}
+                onClick={handleStartChat}
+                disabled={!selectedPDF && sourceType !== 'all'}
+                size="large"
+                sx={{ minWidth: 140 }}
+              >
+                Start Chat
+              </Button>
+
+              <Button
+                component={Link}
+                to="/videos"
+                variant="outlined"
+                startIcon={<VideoIcon />}
+                disabled={!selectedPDF && sourceType !== 'all'}
+                size="large"
+                sx={{ minWidth: 180 }}
+              >
+                Video Recommendations
+              </Button>
+            </Box>
+          </Box>
+        )}
+
+        {/* Tab 1: Upload PDF */}
+        {tabValue === 1 && (
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <input
+              type="file"
+              accept=".pdf"
+              onChange={handleFileUpload}
+              style={{ display: 'none' }}
+              id="pdf-upload"
+              disabled={uploading}
+            />
+            <label htmlFor="pdf-upload">
+              <Button
+                variant="contained"
+                component="span"
+                startIcon={uploading ? <CircularProgress size={20} /> : <UploadIcon />}
+                disabled={uploading}
+                size="large"
+                sx={{ px: 4, py: 2 }}
+              >
+                {uploading ? 'Uploading...' : 'Upload PDF'}
+              </Button>
+            </label>
+            
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+              Upload your own NCERT textbooks or study materials
+            </Typography>
+            
+            {uploading && (
+              <Box sx={{ mt: 2, maxWidth: 400, mx: 'auto' }}>
+                <LinearProgress />
+              </Box>
+            )}
+          </Box>
+        )}
+
+        {/* Tab 2: Manage PDFs */}
+        {tabValue === 2 && (
+          <Box>
+            {pdfs.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <PdfIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+                <Typography variant="h6" color="text.secondary">
+                  No PDFs uploaded yet
+                </Typography>
+                <Typography color="text.secondary">
+                  Upload your first PDF to get started
+                </Typography>
+              </Box>
+            ) : (
+              <Grid container spacing={2}>
+                {pdfs.map((pdf) => (
+                  <Grid item xs={12} key={pdf._id}>
+                    <Card variant="outlined">
+                      <CardContent>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                            <PdfIcon sx={{ mr: 2, color: 'error.main', fontSize: 32 }} />
+                            <Box sx={{ flex: 1 }}>
+                              <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                                {pdf.originalName}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {formatFileSize(pdf.size)} • Uploaded {new Date(pdf.uploadDate).toLocaleDateString()}
+                              </Typography>
+                            </Box>
+                          </Box>
+                          
+                          <Box sx={{ display: 'flex', gap: 1 }}>
+                            <IconButton
+                              component={Link}
+                              to={`/pdf/${pdf._id}`}
+                              color="primary"
+                              title="View PDF"
+                            >
+                              <ViewIcon />
+                            </IconButton>
+                            
+                            <IconButton
+                              href={pdfAPI.getPDFFile(pdf._id)}
+                              target="_blank"
+                              color="primary"
+                              title="Download PDF"
+                            >
+                              <DownloadIcon />
+                            </IconButton>
+                            
+                            <IconButton
+                              onClick={() => {
+                                setPdfToDelete(pdf);
+                                setDeleteDialogOpen(true);
+                              }}
+                              color="error"
+                              title="Delete PDF"
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Box>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            )}
+          </Box>
+        )}
+      </Paper>
+
+      {/* Features Overview */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" component="h2" gutterBottom sx={{ 
+          fontWeight: 700, 
+          textAlign: 'center', 
+          mb: 4,
+          background: 'linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent'
+        }}>
+          ✨ Learning Features
+        </Typography>
+        
+        {/* Small Cards in One Horizontal Row */}
+        <Grid container spacing={2} sx={{ 
+          justifyContent: 'center',
+          maxWidth: 1000,
+          mx: 'auto',
+          flexDirection: 'row'
+        }}>
+          <Grid item xs={12} sm={4} md={4}>
+            <Card sx={{ 
+              height: 240,
+              display: 'flex',
+              flexDirection: 'column',
+              textAlign: 'center',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              cursor: 'pointer',
+              '&:hover': {
+                transform: 'translateY(-6px)',
+                boxShadow: '0 8px 25px rgba(25, 118, 210, 0.15)',
+                '& .feature-avatar': {
+                  transform: 'scale(1.1)',
+                  bgcolor: 'primary.main'
+                }
+              }
+            }}>
+              <CardContent sx={{ 
+                p: 2.5,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                height: '100%'
+              }}>
+                <Box>
+                  <Avatar
+                    className="feature-avatar"
+                    sx={{
+                      width: 48,
+                      height: 48,
+                      bgcolor: 'primary.light',
+                      mx: 'auto',
+                      mb: 1.5,
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    <ChatIcon sx={{ fontSize: 24 }} />
+                  </Avatar>
+                  <Typography variant="h6" component="h3" gutterBottom sx={{ 
+                    fontWeight: 600,
+                    fontSize: '1rem',
+                    mb: 1
+                  }}>
+                    AI Chat Assistant
+                  </Typography>
+                  <Typography color="text.secondary" sx={{ 
                     mb: 2,
-                    '&:hover': { bgcolor: 'action.hover' },
-                    border: selectedPDF?._id === pdf._id ? 2 : 1,
-                    borderColor: selectedPDF?._id === pdf._id ? 'primary.main' : 'divider'
+                    fontSize: '0.8rem',
+                    lineHeight: 1.4
+                  }}>
+                    Ask questions about your study material and get instant responses.
+                  </Typography>
+                </Box>
+                <Button 
+                  component={Link} 
+                  to="/chat" 
+                  variant="contained" 
+                  size="small"
+                  sx={{ 
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    py: 0.8
                   }}
                 >
-                  <FormControlLabel
-                    value={pdf._id}
-                    control={<Radio />}
-                    label={
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                        <Box sx={{ minWidth: 0, flex: 1 }}>
-                          <Typography variant="subtitle1" sx={{ fontWeight: 500, noWrap: true }}>
-                            {pdf.originalName}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            Uploaded on {new Date(pdf.uploadDate).toLocaleDateString()}
-                          </Typography>
-                        </Box>
-                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', ml: 2 }}>
-                          {pdf.isNCERT && (
-                            <Chip 
-                              label="NCERT" 
-                              size="small" 
-                              color="primary" 
-                              variant="outlined"
-                            />
-                          )}
-                          <Typography variant="caption" color="text.secondary">
-                            {(pdf.size / 1024 / 1024).toFixed(1)} MB
-                          </Typography>
-                        </Box>
-                      </Box>
-                    }
-                    sx={{ width: '100%', m: 0 }}
-                  />
-                </Paper>
-              ))}
-            </RadioGroup>
-          </CardContent>
-        </Card>
-      )}
+                  Start Chat
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
 
-      {/* Learning Features */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={4}>
-          <Card sx={{ height: '100%', textAlign: 'center' }}>
-            <CardContent sx={{ p: 3 }}>
-              <Avatar
-                sx={{
-                  width: 56,
-                  height: 56,
-                  bgcolor: 'primary.light',
-                  mx: 'auto',
-                  mb: 2
-                }}
-              >
-                <ChatIcon />
-              </Avatar>
-              <Typography variant="h6" component="h3" gutterBottom sx={{ fontWeight: 600 }}>
-                AI Chat Assistant
-              </Typography>
-              <Typography color="text.secondary" sx={{ mb: 3 }}>
-                Ask questions about your study material and get instant, intelligent responses.
-              </Typography>
-              <Button component={Link} to="/chat" variant="outlined" size="small">
-                Start Chatting
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
+          <Grid item xs={12} sm={4} md={4}>
+            <Card sx={{ 
+              height: 240,
+              display: 'flex',
+              flexDirection: 'column',
+              textAlign: 'center',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              cursor: 'pointer',
+              '&:hover': {
+                transform: 'translateY(-6px)',
+                boxShadow: '0 8px 25px rgba(25, 118, 210, 0.15)',
+                '& .feature-avatar': {
+                  transform: 'scale(1.1)',
+                  bgcolor: 'success.main'
+                }
+              }
+            }}>
+              <CardContent sx={{ 
+                p: 2.5,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                height: '100%'
+              }}>
+                <Box>
+                  <Avatar
+                    className="feature-avatar"
+                    sx={{
+                      width: 48,
+                      height: 48,
+                      bgcolor: 'success.light',
+                      mx: 'auto',
+                      mb: 1.5,
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    <QuizIcon sx={{ fontSize: 24 }} />
+                  </Avatar>
+                  <Typography variant="h6" component="h3" gutterBottom sx={{ 
+                    fontWeight: 600,
+                    fontSize: '1rem',
+                    mb: 1
+                  }}>
+                    Interactive Quizzes
+                  </Typography>
+                  <Typography color="text.secondary" sx={{ 
+                    mb: 2,
+                    fontSize: '0.8rem',
+                    lineHeight: 1.4
+                  }}>
+                    Test your knowledge with AI-generated quizzes.
+                  </Typography>
+                </Box>
+                <Button 
+                  component={Link} 
+                  to="/quiz" 
+                  variant="contained" 
+                  color="success"
+                  size="small"
+                  sx={{ 
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    py: 0.8
+                  }}
+                >
+                  Take Quiz
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
 
-        <Grid item xs={12} md={4}>
-          <Card sx={{ height: '100%', textAlign: 'center' }}>
-            <CardContent sx={{ p: 3 }}>
-              <Avatar
-                sx={{
-                  width: 56,
-                  height: 56,
-                  bgcolor: 'primary.light',
-                  mx: 'auto',
-                  mb: 2
-                }}
-              >
-                <QuizIcon />
-              </Avatar>
-              <Typography variant="h6" component="h3" gutterBottom sx={{ fontWeight: 600 }}>
-                Interactive Quizzes
-              </Typography>
-              <Typography color="text.secondary" sx={{ mb: 3 }}>
-                Test your knowledge with AI-generated quizzes based on your uploaded content.
-              </Typography>
-              <Button component={Link} to="/quiz" variant="outlined" size="small">
-                Take Quiz
-              </Button>
-            </CardContent>
-          </Card>
+          <Grid item xs={12} sm={4} md={4}>
+            <Card sx={{ 
+              height: 240,
+              display: 'flex',
+              flexDirection: 'column',
+              textAlign: 'center',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              cursor: 'pointer',
+              '&:hover': {
+                transform: 'translateY(-6px)',
+                boxShadow: '0 8px 25px rgba(25, 118, 210, 0.15)',
+                '& .feature-avatar': {
+                  transform: 'scale(1.1)',
+                  bgcolor: 'warning.main'
+                }
+              }
+            }}>
+              <CardContent sx={{ 
+                p: 2.5,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                height: '100%'
+              }}>
+                <Box>
+                  <Avatar
+                    className="feature-avatar"
+                    sx={{
+                      width: 48,
+                      height: 48,
+                      bgcolor: 'warning.light',
+                      mx: 'auto',
+                      mb: 1.5,
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    <ProgressIcon sx={{ fontSize: 24 }} />
+                  </Avatar>
+                  <Typography variant="h6" component="h3" gutterBottom sx={{ 
+                    fontWeight: 600,
+                    fontSize: '1rem',
+                    mb: 1
+                  }}>
+                    Track Progress
+                  </Typography>
+                  <Typography color="text.secondary" sx={{ 
+                    mb: 2,
+                    fontSize: '0.8rem',
+                    lineHeight: 1.4
+                  }}>
+                    Monitor your learning journey and progress.
+                  </Typography>
+                </Box>
+                <Button 
+                  component={Link} 
+                  to="/progress" 
+                  variant="contained" 
+                  color="warning"
+                  size="small"
+                  sx={{ 
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    py: 0.8
+                  }}
+                >
+                  View Progress
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
         </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Card sx={{ height: '100%', textAlign: 'center' }}>
-            <CardContent sx={{ p: 3 }}>
-              <Avatar
-                sx={{
-                  width: 56,
-                  height: 56,
-                  bgcolor: 'primary.light',
-                  mx: 'auto',
-                  mb: 2
-                }}
-              >
-                <ProgressIcon />
-              </Avatar>
-              <Typography variant="h6" component="h3" gutterBottom sx={{ fontWeight: 600 }}>
-                Track Progress
-              </Typography>
-              <Typography color="text.secondary" sx={{ mb: 3 }}>
-                Monitor your learning progress and identify areas for improvement.
-              </Typography>
-              <Button component={Link} to="/progress" variant="outlined" size="small">
-                View Progress
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      </Box>
 
       {/* Getting Started Guide */}
       <Card>
@@ -465,6 +782,28 @@ const Dashboard = () => {
           </Grid>
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Delete PDF</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete "{pdfToDelete?.originalName}"? 
+            This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleDeletePDF} color="error" variant="contained">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
