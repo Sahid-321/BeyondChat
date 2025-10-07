@@ -57,11 +57,7 @@ const Progress = () => {
 
   const fetchProgressData = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/users/progress', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await axios.get('http://localhost:5000/api/progress/user?userId=anonymous');
       setProgressData(response.data);
     } catch (error) {
       console.error('Error fetching progress data:', error);
@@ -71,11 +67,7 @@ const Progress = () => {
 
   const fetchRecentAttempts = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/quiz/attempts', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await axios.get('http://localhost:5000/api/quiz/attempts/user?userId=anonymous');
       setRecentAttempts(response.data);
       setLoading(false);
     } catch (error) {

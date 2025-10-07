@@ -38,6 +38,8 @@ import { pdfAPI, quizAPI } from '../utils/api';
 
 const QuizGenerator = () => {
   const location = useLocation();
+  const { pdfIds, sourceType } = location.state || {};
+  
   const [pdfs, setPdfs] = useState([]);
   const [selectedPDF, setSelectedPDF] = useState(location.state?.selectedPDF || null);
   const [quizType, setQuizType] = useState('MCQ');

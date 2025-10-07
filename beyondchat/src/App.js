@@ -9,6 +9,7 @@ import PDFViewer from './components/PDFViewer';
 import QuizGenerator from './components/QuizGenerator';
 import Chat from './components/Chat';
 import Progress from './components/Progress';
+import VideoRecommender from './components/VideoRecommender';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
               <Route path="/quiz" element={<QuizGenerator />} />
               <Route path="/chat" element={<Chat />} />
               <Route path="/progress" element={<Progress />} />
+              <Route path="/videos" element={<VideoRecommender />} />
             </Routes>
           </Box>
         </Box>

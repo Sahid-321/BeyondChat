@@ -44,10 +44,16 @@ const Chat = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const messagesEndRef = React.useRef(null);
   
+  // Handle source selection from Dashboard
+  const { selectedPDFs: dashboardPDFs, sourceType } = location.state || {};
+  
   const [chats, setChats] = useState([]);
   const [currentChat, setCurrentChat] = useState(null);
   const [pdfs, setPdfs] = useState([]);
-  const [selectedPDFs, setSelectedPDFs] = useState(location.state?.selectedPDF ? [location.state.selectedPDF] : []);
+  const [selectedPDFs, setSelectedPDFs] = useState(
+    dashboardPDFs || 
+    (location.state?.selectedPDF ? [location.state.selectedPDF] : [])
+  );
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);

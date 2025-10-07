@@ -39,6 +39,7 @@ app.use('/api/pdfs', require('./routes/pdfRoutes'));
 app.use('/api/quiz', require('./routes/quizRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
 app.use('/api/progress', require('./routes/progressRoutes'));
+app.use('/api/videos', require('./routes/videoRoutes'));
 
 app.get('/', (req, res) => {
     res.json({ message: 'BeyondChat API is running!' });

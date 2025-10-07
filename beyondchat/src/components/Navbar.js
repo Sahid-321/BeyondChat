@@ -24,6 +24,7 @@ import {
   Chat as ChatIcon,
   TrendingUp as ProgressIcon,
   School as SchoolIcon,
+  VideoLibrary as VideoIcon,
 } from '@mui/icons-material';
 
 const Navbar = () => {
@@ -40,6 +41,7 @@ const Navbar = () => {
     { path: '/', label: 'Dashboard', icon: <HomeIcon /> },
     { path: '/quiz', label: 'Quiz', icon: <QuizIcon /> },
     { path: '/chat', label: 'Chat', icon: <ChatIcon /> },
+    { path: '/videos', label: 'Videos', icon: <VideoIcon /> },
     { path: '/progress', label: 'Progress', icon: <ProgressIcon /> },
   ];
 
