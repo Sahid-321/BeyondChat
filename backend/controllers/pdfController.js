@@ -120,6 +120,36 @@ const pdfController = {
         }
     },
 
+    // Delete PDF
+    deletePDF: async (req, res) => {
+        try {
+            const pdf = await PDF.findById(req.params.id);
+            if (!pdf) {
+                return res.status(404).json({ error: 'PDF not found' });
+            }
+
+            // Delete the physical file
+            const filePath = path.resolve(pdf.filepath);
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+
+            // Delete from database
+            await PDF.findByIdAndDelete(req.params.id);
+
+            res.json({
+                message: 'PDF deleted successfully',
+                deletedPDF: {
+                    id: pdf._id,
+                    originalName: pdf.originalName
+                }
+            });
+        } catch (error) {
+            console.error('Error deleting PDF:', error);
+            res.status(500).json({ error: 'Failed to delete PDF' });
+        }
+    },
+
     upload: upload.single('pdf')
 };
 

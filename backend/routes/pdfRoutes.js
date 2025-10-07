@@ -14,4 +14,7 @@ router.get('/:id/content', pdfController.getPDFContent);
 // Get PDF file
 router.get('/:id/file', pdfController.getPDFFile);
 
+// Delete PDF
+router.delete('/:id', pdfController.deletePDF);
+
 module.exports = router;
