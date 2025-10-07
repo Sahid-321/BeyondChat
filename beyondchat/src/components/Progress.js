@@ -57,7 +57,7 @@ const Progress = () => {
 
   const fetchProgressData = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/progress/user?userId=anonymous');
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/progress/user?userId=anonymous`);
       setProgressData(response.data);
     } catch (error) {
       console.error('Error fetching progress data:', error);
@@ -67,7 +67,7 @@ const Progress = () => {
 
   const fetchRecentAttempts = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/quiz/attempts/user?userId=anonymous');
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/quiz/attempts/user?userId=anonymous`);
       setRecentAttempts(response.data);
       setLoading(false);
     } catch (error) {
