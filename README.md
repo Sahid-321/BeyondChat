@@ -456,11 +456,6 @@ OPENROUTER_API_KEY=your_openrouter_api_key
 
 ## 🛠 Development Tools & Methodology
 
-### LLM Tools Extensively Used
-- **GitHub Copilot**: Code generation, completion, and refactoring
-- **ChatGPT-4**: Architecture decisions and complex problem solving
-- **Claude**: Code review, optimization, and documentation
-- **OpenRouter**: Multi-LLM integration for diverse AI capabilities
 
 ### Development Approach
 1. **Rapid Prototyping**: Quick MVP development with LLM assistance
