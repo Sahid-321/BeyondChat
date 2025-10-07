@@ -1,75 +1,87 @@
 # BeyondChat - AI-Powered Educational Platform
 
-A comprehensive, responsive web application that transforms PDF learning materials into an interactive educational experience using AI-powered features including chat assistance, quiz generation, progress tracking, and video recommendations.
+An intelligent learning companion that transforms PDF study materials into interactive educational experiences with AI-powered chat, quiz generation, progress tracking, and video recommendations.
 
-## 🚀 Live Demo
+## ✨ Features
 
-[Live URL will be added after deployment]
+- **Smart PDF Management** - Upload, view, and manage study materials
+- **AI Chat Assistant** - Ask questions about your PDFs with contextual answers and citations
+- **Quiz Generator** - Create MCQs, SAQs, and LAQs from your content
+- **Progress Tracking** - Monitor learning analytics and performance
+- **Video Recommendations** - Get relevant educational videos based on your content
 
-## 📋 Features Implemented
+## 🛠 Tech Stack
 
-### ✅ Must-Have Features (100% Complete)
+- **Frontend**: React 18, Material-UI v5, React Router
+- **Backend**: Node.js, Express.js, MongoDB, Mongoose
+- **AI**: OpenRouter API for multi-LLM access
 
-1. **Smart Source Selector**
-   - Intuitive dropdown interface to choose between all uploaded PDFs or specific documents
-   - Clean UI without radio buttons for better user experience
-   - Smart file size and metadata display
-   - Seeded with NCERT Class XI Physics content capability
+## 🚀 Quick Start
 
-2. **Integrated PDF Processing**
-   - Advanced PDF upload with progress indicators
-   - Text extraction and intelligent chunking for AI processing
-   - File management with view, download, and delete capabilities
-   - Support for large educational documents
+### Prerequisites
+- Node.js (v16+)
+- MongoDB (local or cloud)
 
-3. **Advanced Quiz Generator Engine**
-   - Generate MCQs (Multiple Choice Questions), SAQs (Short Answer Questions), LAQs (Long Answer Questions)
-   - Dynamic question generation based on PDF content
-   - Interactive quiz interface with immediate feedback
-   - Comprehensive scoring and explanation system
-   - Option to generate new question sets with different difficulty levels
+### 1. Clone Repository
+```bash
+git clone <repository-url>
+cd beyondchat_assignment
+```
 
-4. **Comprehensive Progress Tracking**
-   - Real-time learning analytics dashboard
-   - Strengths and weaknesses identification through quiz performance
-   - Detailed statistics with visual progress indicators
-   - Historical attempt tracking and improvement analysis
+### 2. Backend Setup
+```bash
+cd backend
+npm install
+```
 
-### ✅ Enhanced Features (Fully Implemented)
+Create `.env` file in backend directory:
+```env
+PORT=5000
+MONGODB_URI=mongodb+srv://sahid:Hd5TKV4MzCy90RKm@ecommerce.qxk5j1r.mongodb.net/beyondchat?retryWrites=true&w=majority
+OPENROUTER_API_KEY=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
+```
 
-1. **AI Chat Assistant (ChatGPT-inspired)**
-   - Modern chat interface with real-time messaging
-   - Context-aware responses based on selected study materials
-   - Auto-chat creation and management system
-   - Mobile-responsive design with sticky input
-   - Clean message history and navigation
+Start backend:
+```bash
+npm start
+```
 
-2. **RAG Implementation with Citations**
-   - Advanced PDF content ingestion and semantic chunking
-   - AI responses include specific page citations and text snippets
-   - Context-aware answers directly from uploaded materials
-   - Intelligent content retrieval for accurate educational support
+### 3. Frontend Setup
+```bash
+cd beyondchat
+npm install
+npm start
+```
 
-3. **AI-Powered Video Recommendations**
-   - Dynamic video suggestions based on PDF content analysis
-   - Advanced NLP keyword extraction and content analysis
-   - Multi-factor relevance scoring algorithm
-   - Curated educational video database with metadata
-   - Real-time recommendations that adapt to study materials
+### 4. Access Application
+- Frontend: `http://localhost:3000`
+- Backend API: `http://localhost:5000`
 
-### ✅ UI/UX Enhancements
+## 📱 How to Use
 
-1. **Compact Feature Cards Layout**
-   - Small, horizontal feature cards in single row
-   - Golden ratio-inspired design principles
-   - Smooth hover animations and visual feedback
-   - Mobile-responsive grid system
+1. **Upload PDFs** - Add your study materials using the upload tab
+2. **Select Source** - Choose specific PDF or all PDFs from dropdown
+3. **Start Learning** - Use chat, generate quizzes, or track progress
+4. **Get Videos** - Access AI-recommended educational videos
 
-2. **Streamlined Navigation**
-   - Tabbed interface for different functionalities
-   - Intuitive source selection without cluttered radio buttons
-   - Clean action buttons with clear CTAs
-   - Consistent Material-UI design system
+## 📁 Project Structure
+
+```
+beyondchat_assignment/
+├── beyondchat/          # React Frontend
+│   ├── src/components/  # React Components
+│   └── src/utils/       # API utilities
+├── backend/             # Node.js Backend
+│   ├── controllers/     # Business logic
+│   ├── models/          # Database schemas
+│   ├── routes/          # API endpoints
+│   └── uploads/         # File storage
+└── README.md
+```
+
+---
+
+**Built with AI-assisted development** • **Educational Technology Platform** • **Modern Full-Stack Application**
 
 ## 🛠 Technology Stack
 
