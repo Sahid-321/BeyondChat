@@ -25,6 +25,19 @@ export const pdfAPI = {
 
   getPDFFile: (id) => {
     return `${API_BASE_URL}/pdfs/${id}/file`;
+  },
+
+  deletePDF: async (id) => {
+    const response = await fetch(`${API_BASE_URL}/pdfs/${id}`, {
+      method: 'DELETE',
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to delete PDF');
+    }
+    
+    return response.json();
   }
 };
 
