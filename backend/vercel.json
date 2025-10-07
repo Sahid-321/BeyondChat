@@ -2,23 +2,18 @@
   "version": 2,
   "builds": [
     {
-      "src": "server.js",
+      "src": "index.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "server.js"
+      "dest": "index.js"
     }
   ],
-  "env": {
-    "MONGODB_URI": "mongodb+srv://sahid:Hd5TKV4MzCy90RKm@ecommerce.qxk5j1r.mongodb.net/beyondchat?retryWrites=true&w=majority",
-    "OPENROUTER_API_KEY": "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",
-    "PORT": "5000"
-  },
   "functions": {
-    "server.js": {
+    "index.js": {
       "maxDuration": 30
     }
   }
