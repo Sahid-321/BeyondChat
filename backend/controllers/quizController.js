@@ -58,41 +58,57 @@ const quizController = {
                 });
             }
 
-            // Use first few chunks for quiz generation to avoid token limits
-            const contentForQuiz = pdf.chunks.slice(0, 5).map(chunk => chunk.text).join('\n\n');
+            // Use limited content for quiz generation to avoid token limits
+            // Take only the first 2-3 chunks and limit total characters
+            const maxContentLength = 8000; // Approximately 2000 tokens (1 token ≈ 4 characters)
+            let contentForQuiz = '';
+            
+            for (let i = 0; i < pdf.chunks.length && contentForQuiz.length < maxContentLength; i++) {
+                const chunkText = pdf.chunks[i].text;
+                if (contentForQuiz.length + chunkText.length <= maxContentLength) {
+                    contentForQuiz += chunkText + '\n\n';
+                } else {
+                    // Add partial chunk if it fits
+                    const remainingLength = maxContentLength - contentForQuiz.length;
+                    contentForQuiz += chunkText.substring(0, remainingLength) + '...';
+                    break;
+                }
+            }
 
-            const prompt = `Based on the following educational content, generate ${questionCount} ${type} questions:
+            // If content is still too long, truncate it
+            if (contentForQuiz.length > maxContentLength) {
+                contentForQuiz = contentForQuiz.substring(0, maxContentLength) + '...';
+            }
 
-Content:
+            const prompt = `Generate ${questionCount} ${type} questions from this content:
+
 ${contentForQuiz}
 
-Requirements:
-- For MCQ: Provide 4 options (A, B, C, D) with one correct answer
-- For SAQ: Short answer questions requiring 2-3 sentences
-- For LAQ: Long answer questions requiring detailed explanations
-- Include explanations for each answer
-- Reference page numbers when possible
-
-Format the response as JSON with this structure:
+Format as JSON:
 {
   "questions": [
     {
       "question": "Question text",
       "type": "${type}",
-      "options": ["Option A", "Option B", "Option C", "Option D"], // Only for MCQ
-      "correctAnswer": "Correct answer text",
-      "explanation": "Detailed explanation",
+      ${type === 'MCQ' ? '"options": ["A", "B", "C", "D"],' : ''}
+      "correctAnswer": "Answer",
+      "explanation": "Brief explanation",
       "pageReference": 1
     }
   ]
-}`;
+}
+
+Requirements:
+- ${type === 'MCQ' ? 'MCQ: 4 options, one correct' : type === 'SAQ' ? 'SAQ: Short answer (2-3 sentences)' : 'LAQ: Detailed answer'}
+- Include brief explanations
+- Reference page numbers when possible`;
 
             try {
                 const completion = await openai.chat.completions.create({
                     model: "openai/gpt-3.5-turbo",
                     messages: [{ role: "user", content: prompt }],
                     temperature: 0.7,
-                    max_tokens: 2000
+                    max_tokens: 1500 // Reduced from 2000 to stay within limits
                 });
 
                 let quizData;
